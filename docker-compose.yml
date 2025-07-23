@@ -1,0 +1,52 @@
+
+    services:
+      api-service:
+        build:
+          context: ./api-service
+          dockerfile: Dockerfile
+        ports:
+          - "3001:3001"
+        environment:
+          - MONGO_URI=mongodb://mongo:27017/email_system
+          - REDIS_URL=redis://redis:6379
+          - PORT=3001
+        depends_on:
+          - mongo
+          - redis
+        volumes:
+          - ./api-service:/app
+        networks:
+          - email-network
+      worker-service:
+        build:
+          context: ./worker-service
+          dockerfile: Dockerfile
+        environment:
+          - MONGO_URI=mongodb://mongo:27017/email_system
+          - REDIS_URL=redis://redis:6379
+        depends_on:
+          - mongo
+          - redis
+        volumes:
+          - ./worker-service:/app
+        networks:
+          - email-network
+      mongo:
+        image: mongo:latest
+        ports:
+          - "27017:27017"
+        volumes:
+          - mongo-data:/data/db
+        networks:
+          - email-network
+      redis:
+        image: redis:latest
+        ports:
+          - "6379:6379"
+        networks:
+          - email-network
+    volumes:
+      mongo-data:
+    networks:
+      email-network:
+        driver: bridge
